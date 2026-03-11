@@ -345,6 +345,14 @@ class DownloadHook : IXposedHookLoadPackage {
                     )
                 } else null
 
+                // 创建 multiProgressInfo - 圆形进度指示器
+                val multiProgressInfo = if (progress >= 0 && progress < 100) {
+                    org.json.JSONObject().apply {
+                        put("progress", progress)
+                        put("color", "#006EFF")
+                    }
+                } else null
+
                 // 发送焦点通知
                 val apiBundle = focusApi.sendFocus(
                     title = title,
@@ -352,6 +360,7 @@ class DownloadHook : IXposedHookLoadPackage {
                     baseInfo = baseInfo,
                     hintInfo = hintInfo,
                     progressInfo = progressInfo,
+                    multiProgressInfo = multiProgressInfo,  // 添加圆形进度指示器
                     addpics = picsBundle,
                     enableFloat = false,
                     picbg = null,  // 不使用自定义背景
