@@ -126,11 +126,51 @@ class DownloadHook : IXposedHookLoadPackage {
      */
     object IslandInjector {
 
+        // 存储已处理的通知ID，避免重复处理
+        private val processedNotifications = mutableMapOf<String, Long>()
+
         fun inject(notif: Notification, lpparam: XC_LoadPackage.LoadPackageParam, title: String, text: String, extras: Bundle) {
             try {
+                // 使用title作为唯一标识
+                val notificationKey = "${lpparam.packageName}_$title"
+                val currentTime = System.currentTimeMillis()
+
+                // 检查是否最近处理过（避免频繁刷新）
+                val lastProcessTime = processedNotifications[notificationKey] ?: 0
+                if (currentTime - lastProcessTime < 500) { // 500ms内不重复处理
+                    return
+                }
+                processedNotifications[notificationKey] = currentTime
+
+                // 清理旧记录（5秒前的）
+                processedNotifications.entries.removeIf { currentTime - it.value > 5000 }
+
                 XposedBridge.log("HyperIsland: Starting injection...")
 
-                val progress = extras.getInt("progress", 0)
+                // 尝试多种方式获取进度
+                var progress = 0
+
+                // 方法1: 直接从extras获取progress字段
+                progress = extras.getInt("progress", -1)
+
+                // 方法2: 从title中解析百分比（例如 "正在下载xxx 50%"）
+                if (progress == -1) {
+                    val progressPattern = Regex("""(\d+)%""")
+                    val match = progressPattern.find(title + text)
+                    if (match != null) {
+                        progress = match.groupValues[1].toInt()
+                        XposedBridge.log("HyperIsland: Extracted progress from text: $progress%")
+                    }
+                }
+
+                // 方法3: 检查是否有其他进度相关的字段
+                if (progress == -1) {
+                    progress = extras.getInt("android.progress", 0)
+                    if (progress == 0) {
+                        progress = extras.getInt("percent", 0)
+                    }
+                }
+
                 XposedBridge.log("HyperIsland: progress = $progress")
 
                 // 获取application context
@@ -186,7 +226,7 @@ class DownloadHook : IXposedHookLoadPackage {
                 }
 
                 XposedBridge.log("HyperIsland: ✅✅✅ INJECTION COMPLETE ✅✅✅")
-                XposedBridge.log("HyperIsland: Modified notification extras with island params")
+                XposedBridge.log("HyperIsland: Progress=$progress%, Island should update now!")
 
             } catch (e: Exception) {
                 XposedBridge.log("HyperIsland: ❌ Injection error: ${e.message}")
@@ -217,7 +257,8 @@ class DownloadHook : IXposedHookLoadPackage {
             val paramV2 = org.json.JSONObject().apply {
                 put("protocol", 1)
                 put("business", "download")
-                put("enableFloat", true)
+                put("enableFloat", false)
+                put("timeout", 30)
                 put("updatable", progress >= 0 && progress < 100)
 
                 // 状态栏数据
@@ -225,7 +266,7 @@ class DownloadHook : IXposedHookLoadPackage {
                 put("tickerPic", "miui.focus.pic_ticker")
 
                 // 息屏AOD数据
-                put("aodTitle", if (progress > 0) "下载中 $progress%" else title)
+                put("aodTitle", if (progress > 0 && progress < 100) "下载中 $progress%" else title)
                 put("aodPic", "miui.focus.pic_ticker")
 
                 // 岛数据
@@ -244,7 +285,11 @@ class DownloadHook : IXposedHookLoadPackage {
                             put("picInfo", picInfo)
 
                             val textInfo = org.json.JSONObject().apply {
-                                put("frontTitle", if (progress >= 100) "完成" else "下载中")
+                                put("frontTitle", when {
+                                    progress >= 100 -> "完成"
+                                    progress > 0 -> "下载中"
+                                    else -> "准备中"
+                                })
                                 put("title", if (progress >= 0) "$progress%" else content)
                                 put("content", "正在下载")
                                 put("useHighLight", progress >= 100)
@@ -284,7 +329,13 @@ class DownloadHook : IXposedHookLoadPackage {
                 // 提示信息
                 val hintInfo = org.json.JSONObject().apply {
                     put("type", 1)
-                    put("title", if (progress >= 100) "下载完成" else "下载中")
+                    put("frontTitle", when {
+                        progress >= 100 -> "下载完成"
+                        progress > 0 -> "下载中"
+                        else -> "准备中"
+                    })
+                    put("title", progress)
+                    put("content", content)
                 }
                 put("hintInfo", hintInfo)
             }
