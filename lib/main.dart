@@ -209,9 +209,9 @@ class _HyperIslandTestPageState extends State<HyperIslandTestPage> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      '此页面仅用于测试是否支持超级岛。\n\n'
-                      '点击上方按钮可以发送不同类型的岛通知。\n\n'
-                      '实际使用请在LSPosed管理器中激活使用',
+                      '此页面仅用于测试是否支持超级岛，并不代表实际效果\n\n'
+                      '请在HyperCeiler中关闭系统界面和小米服务框架的焦点通知白名单\n\n'
+                      '实际使用请在LSPosed管理器中激活，转到应用商店/下载管理使用',
                     ),
                   ],
                 ),

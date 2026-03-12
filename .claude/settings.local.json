@@ -4,7 +4,10 @@
       "Bash(./gradlew:*)",
       "Bash(ls:*)",
       "WebSearch",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(find \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" -type f -name \"*download*\" 2>/dev/null | head -20)",
+      "Bash(find /c/Users/1812z/Documents/GitHub/hyperisland -type f -name \"*.kt\" 2>/dev/null | grep -i download)",
+      "Bash(find /c/Users/1812z/Documents/GitHub/hyperisland -type f \\\\\\( -name \"*.kt\" -o -name \"*.gradle\" \\\\\\) 2>/dev/null | head -30)"
     ]
   }
 }
