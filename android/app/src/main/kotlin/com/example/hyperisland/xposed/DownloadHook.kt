@@ -45,6 +45,28 @@ class DownloadHook : IXposedHookLoadPackage {
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         val pkg = lpparam.packageName
+
+        // Hook 自身进程：将 MainActivity.isModuleActive() 替换为返回 true
+        if (pkg == "com.example.hyperisland") {
+            try {
+                val mainActivityClass = lpparam.classLoader
+                    .loadClass("com.example.hyperisland.MainActivity")
+                XposedHelpers.findAndHookMethod(
+                    mainActivityClass,
+                    "isModuleActive",
+                    object : XC_MethodHook() {
+                        override fun beforeHookedMethod(param: MethodHookParam) {
+                            param.result = true
+                        }
+                    }
+                )
+                XposedBridge.log("HyperIsland: hooked MainActivity.isModuleActive()")
+            } catch (e: Throwable) {
+                XposedBridge.log("HyperIsland: failed to hook isModuleActive: ${e.message}")
+            }
+            return
+        }
+
         // 只处理下载相关的包，避免干扰其他应用
         val isTarget = pkg == "com.android.providers.downloads" ||
                        pkg == "com.xiaomi.android.app.downloadmanager"

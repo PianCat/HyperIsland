@@ -80,6 +80,10 @@ class MainActivity : FlutterActivity() {
                     }
                 }
 
+                "isModuleActive" -> {
+                    result.success(isModuleActive())
+                }
+
                 "checkPermission" -> {
                     result.success(checkNotificationPermission())
                 }
@@ -95,6 +99,9 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
+
+    // 默认返回 false；LSPosed Hook 加载后会将此方法替换为返回 true
+    fun isModuleActive(): Boolean = false
 
     private fun checkNotificationPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
