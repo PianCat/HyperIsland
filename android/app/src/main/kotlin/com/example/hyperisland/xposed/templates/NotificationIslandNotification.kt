@@ -74,7 +74,7 @@ object NotificationIslandNotification : IslandTemplate {
                     islandFirstFloat = (firstFloat == "on")
                     enableFloat = (enableFloatMode == "on")
                 }
-                updatable        = true
+                updatable        = false
                 isShowNotification = focusNotificaiton
                 ticker = title
                 island {

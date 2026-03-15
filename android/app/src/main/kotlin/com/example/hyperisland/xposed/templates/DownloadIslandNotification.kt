@@ -105,11 +105,14 @@ object DownloadIslandNotification {
                                 this.title = islandStateTitle
                             }
                         }
-                        if (!isComplete && !isWaiting) {
+                        if (!isComplete && !isWaiting && !isPaused) {
                             progressTextInfo {
                                 textInfo {
                                     this.title = fileName
                                     narrowFont = true
+                                }
+                                progressInfo {
+                                    this.progress = progress
                                 }
                             }
                         } else {
@@ -123,10 +126,18 @@ object DownloadIslandNotification {
                         }
                     }
                     smallIslandArea {
-                        picInfo {
-                            type = 1
-                            pic  = downloadIconKey
-                        }
+//                        combinePicInfo
+//                        {
+                            picInfo {
+                                type = 1
+                                pic  = downloadIconKey
+                            }
+//                            if (!isComplete && !isPaused && !isWaiting) {
+//                                progressInfo {
+//                                    this.progress = progress
+//                                }
+//                            }
+//                        }
                     }
                 }
 
