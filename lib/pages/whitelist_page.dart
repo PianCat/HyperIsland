@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controllers/whitelist_controller.dart';
+import 'app_channels_page.dart';
 
 class WhitelistPage extends StatefulWidget {
   const WhitelistPage({super.key});
@@ -38,7 +39,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text('第三方适应用适配'),
+            title: const Text('第三方应用适配'),
             backgroundColor: cs.surface,
             centerTitle: false,
           ),
@@ -107,6 +108,15 @@ class _WhitelistPageState extends State<WhitelistPage> {
                         _ctrl.enabledPackages.contains(apps[index].packageName),
                     onChanged: (v) =>
                         _ctrl.setEnabled(apps[index].packageName, v),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AppChannelsPage(
+                          app: apps[index],
+                          controller: _ctrl,
+                        ),
+                      ),
+                    ),
                     isFirst: index == 0,
                     isLast: index == apps.length - 1,
                   ),
@@ -114,6 +124,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
                 ),
               ),
             ),
+
         ],
       ),
     );
@@ -125,6 +136,7 @@ class _AppTile extends StatelessWidget {
     required this.app,
     required this.enabled,
     required this.onChanged,
+    required this.onTap,
     required this.isFirst,
     required this.isLast,
   });
@@ -132,6 +144,7 @@ class _AppTile extends StatelessWidget {
   final AppInfo app;
   final bool enabled;
   final ValueChanged<bool> onChanged;
+  final VoidCallback onTap;
   final bool isFirst;
   final bool isLast;
 
@@ -152,7 +165,7 @@ class _AppTile extends StatelessWidget {
           borderRadius: radius,
           child: InkWell(
             borderRadius: radius,
-            onTap: () => onChanged(!enabled),
+            onTap: onTap,
             child: Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

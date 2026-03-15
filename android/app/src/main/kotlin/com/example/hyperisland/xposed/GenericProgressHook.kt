@@ -43,7 +43,18 @@ class GenericProgressHook : IXposedHookLoadPackage {
                 val map = csv.split(",")
                     .map { it.trim() }
                     .filter { it.isNotBlank() }
-                    .associate { it to emptySet<String>() }
+                    .associate { pkg ->
+                        val channelUri = android.net.Uri.parse(
+                            "content://com.example.hyperisland.settings/pref_channels_$pkg"
+                        )
+                        val channelCsv = context.contentResolver
+                            .query(channelUri, null, null, null, null)
+                            ?.use { if (it.moveToFirst()) it.getString(0) else "" }
+                            ?: ""
+                        val channels = if (channelCsv.isBlank()) emptySet()
+                        else channelCsv.split(",").filter { it.isNotBlank() }.toSet()
+                        pkg to channels
+                    }
                 cachedWhitelist = map
                 XposedBridge.log("HyperIsland[Generic]: whitelist loaded (${map.size} apps): ${map.keys}")
                 map

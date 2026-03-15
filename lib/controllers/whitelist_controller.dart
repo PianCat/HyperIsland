@@ -18,6 +18,20 @@ class AppInfo {
   });
 }
 
+class ChannelInfo {
+  final String id;
+  final String name;
+  final String description;
+  final int importance;
+
+  const ChannelInfo({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.importance,
+  });
+}
+
 class WhitelistController extends ChangeNotifier {
   List<AppInfo> _allApps = [];
   Set<String> enabledPackages = {};
@@ -80,5 +94,43 @@ class WhitelistController extends ChangeNotifier {
   void setSearch(String query) {
     _searchQuery = query;
     notifyListeners();
+  }
+
+  // ── 渠道管理 ──────────────────────────────────────────────────────────────
+
+  /// 获取指定包的通知渠道列表（调用原生）。
+  Future<List<ChannelInfo>> getChannels(String packageName) async {
+    try {
+      final rawList = await _channel.invokeMethod<List<dynamic>>(
+            'getNotificationChannels', {'packageName': packageName}) ??
+          [];
+      return rawList.map((raw) {
+        final map = Map<String, dynamic>.from(raw as Map);
+        return ChannelInfo(
+          id: map['id'] as String,
+          name: map['name'] as String? ?? map['id'] as String,
+          description: map['description'] as String? ?? '',
+          importance: map['importance'] as int? ?? 3,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('getChannels error: $e');
+      return [];
+    }
+  }
+
+  /// 读取已保存的启用渠道 ID 集合。空集合表示对全部渠道生效。
+  Future<Set<String>> getEnabledChannels(String packageName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final csv = prefs.getString('pref_channels_$packageName') ?? '';
+    return csv.isEmpty ? {} : csv.split(',').where((s) => s.isNotEmpty).toSet();
+  }
+
+  /// 保存启用渠道 ID 集合。空集合表示对全部渠道生效。
+  Future<void> setEnabledChannels(
+      String packageName, Set<String> channelIds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        'pref_channels_$packageName', channelIds.join(','));
   }
 }
