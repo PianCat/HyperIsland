@@ -39,7 +39,8 @@ class SettingsProvider : ContentProvider() {
             segment.startsWith("pref_channel_icon_") ||
             segment.startsWith("pref_channel_focus_") ||
             segment.startsWith("pref_channel_first_float_") ||
-            segment.startsWith("pref_channel_enable_float_")) {
+            segment.startsWith("pref_channel_enable_float_") ||
+            segment.startsWith("pref_channel_timeout_")) {
             cursor.newRow().add(prefs.getString(flutterKey, "") ?: "")
             return cursor
         }

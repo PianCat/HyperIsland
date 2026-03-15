@@ -91,6 +91,7 @@ object DownloadIslandNotification {
                 enableFloat      = false
                 updatable        = !isComplete
 
+                ticker = fileName
                 island {
                     islandProperty = 1
                     bigIslandArea {

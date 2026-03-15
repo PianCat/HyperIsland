@@ -31,10 +31,12 @@ object NotificationIslandNotification : IslandTemplate {
         subtitle        = data.subtitle,
         actions         = data.actions,
         notifIcon       = data.notifIcon,
+        largeIcon       = data.largeIcon,
         appIconRaw      = data.appIconRaw,
         focusNotif      = data.focusNotif,
         firstFloat      = data.firstFloat,
         enableFloatMode = data.enableFloatMode,
+        timeoutSecs   = data.islandTimeout,
     )
 
     private fun inject(
@@ -44,13 +46,15 @@ object NotificationIslandNotification : IslandTemplate {
         subtitle: String,
         actions: List<Notification.Action>,
         notifIcon: Icon?,
+        largeIcon: Icon?,
         appIconRaw: Icon?,
         focusNotif: String,
         firstFloat: String,
         enableFloatMode: String,
+        timeoutSecs: Int,
     ) {
         try {
-            val displayIcon = notifIcon ?: appIconRaw
+            val displayIcon = largeIcon ?: notifIcon ?: appIconRaw
                 ?: Icon.createWithResource(context, android.R.drawable.ic_dialog_info)
 
             val leftText       = title
@@ -68,10 +72,12 @@ object NotificationIslandNotification : IslandTemplate {
                     islandFirstFloat = (firstFloat == "on")
                     enableFloat = (enableFloatMode == "on")
                 }
-                updatable = true
-                //isShowNotification = !focusNotificaiton
+                updatable        = true
+                isShowNotification = false
+                ticker = title
                 island {
                     islandProperty = 1
+                    islandTimeout  = timeoutSecs
                     bigIslandArea {
                         imageTextInfoLeft {
                             type = 1
@@ -109,7 +115,7 @@ object NotificationIslandNotification : IslandTemplate {
                 }
 
                 val effectiveActions = actions.take(2)
-                if (effectiveActions.isNotEmpty()) {
+                if (effectiveActions.isNotEmpty() && focusNotificaiton) {
                     textButton {
                         effectiveActions.forEachIndexed { index, action ->
                             addActionInfo {

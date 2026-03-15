@@ -36,6 +36,7 @@ object GenericProgressIslandNotification : IslandTemplate {
         focusNotif      = data.focusNotif,
         firstFloat      = data.firstFloat,
         enableFloatMode = data.enableFloatMode,
+        timeoutSecs   = data.islandTimeout,
     )
 
     /**
@@ -105,6 +106,7 @@ object GenericProgressIslandNotification : IslandTemplate {
         focusNotif: String,
         firstFloat: String,
         enableFloatMode: String,
+        timeoutSecs: Int,
     ) {
         try {
             val combined   = "$title $subtitle"
@@ -151,23 +153,25 @@ object GenericProgressIslandNotification : IslandTemplate {
 
             val resolvedFirstFloat  = when (firstFloat)      { "on" -> true; "off" -> false; else -> false }
             val resolvedEnableFloat = when (enableFloatMode)  { "on" -> true; "off" -> false; else -> false }
-            val showIsland          = focusNotif != "off"
+            val focusNotificaiton          = focusNotif != "off"
 
             val islandExtras = FocusNotification.buildV3 {
                 val iconKey = createPicture("key_generic_progress_icon", displayIcon)
 
-                islandFirstFloat = resolvedFirstFloat
-                enableFloat      = resolvedEnableFloat
-                updatable        = !isComplete && !isPaused
+                islandFirstFloat   = resolvedFirstFloat
+                enableFloat        = resolvedEnableFloat
+                updatable          = !isComplete && !isPaused
 
-                if (showIsland) island {
+                ticker = title
+                island{
                     islandProperty = 1
+                    islandTimeout  = timeoutSecs
                     bigIslandArea {
                         imageTextInfoLeft {
                             type = 1
                             picInfo {
                                 type = 1
-                                pic  = iconKey
+                                pic = iconKey
                             }
                             textInfo {
                                 this.title = stateLabel
@@ -196,7 +200,7 @@ object GenericProgressIslandNotification : IslandTemplate {
                     smallIslandArea {
                         picInfo {
                             type = 1
-                            pic  = iconKey
+                            pic = iconKey
                         }
                         if (!isComplete && !isPaused && !isWaiting) {
                             progressInfo {
@@ -206,7 +210,8 @@ object GenericProgressIslandNotification : IslandTemplate {
                     }
                 }
 
-                iconTextInfo {
+
+                if (focusNotificaiton) iconTextInfo {
                     this.title = title
                     content    = displayContent
                     animIconInfo {
@@ -216,7 +221,7 @@ object GenericProgressIslandNotification : IslandTemplate {
                 }
 
                 val effectiveActions = actions.take(2)
-                if (effectiveActions.isNotEmpty()) {
+                if (effectiveActions.isNotEmpty() && focusNotificaiton) {
                     textButton {
                         effectiveActions.forEachIndexed { index, action ->
                             addActionInfo {
