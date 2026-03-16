@@ -124,7 +124,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
             SliverFillRemaining(
               child: Center(
                 child: Text(
-                  _searchCtrl.text.isEmpty ? '没有找到已安装的应用' : '没有匹配的应用',
+                  _searchCtrl.text.isEmpty ? '没有找到已安装的应用\n请检查获取应用列表权限是否开启' : '没有匹配的应用',
                   style: TextStyle(color: cs.onSurfaceVariant),
                 ),
               ),

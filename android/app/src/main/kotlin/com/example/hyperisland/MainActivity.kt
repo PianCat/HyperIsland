@@ -20,9 +20,13 @@ class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.hyperisland/test"
     private val TAG = "HyperIsland"
     private val REQUEST_NOTIFICATION_PERMISSION = 1001
+    private val REQUEST_APP_LIST_PERMISSION     = 1002
 
     private var pendingResult: MethodChannel.Result? = null
     private var pendingCall: MethodCall? = null
+
+    private var pendingAppsResult: MethodChannel.Result? = null
+    private var pendingAppsIncludeSystem: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,10 +94,16 @@ class MainActivity : FlutterActivity() {
 
                 "getInstalledApps" -> {
                     val includeSystem = call.argument<Boolean>("includeSystem") ?: false
-                    Thread {
-                        val apps = getInstalledApps(includeSystem)
-                        runOnUiThread { result.success(apps) }
-                    }.start()
+                    if (isMiuiAppListPermissionSupported() && !checkAppListPermission()) {
+                        pendingAppsResult = result
+                        pendingAppsIncludeSystem = includeSystem
+                        requestAppListPermission()
+                    } else {
+                        Thread {
+                            val apps = getInstalledApps(includeSystem)
+                            runOnUiThread { result.success(apps) }
+                        }.start()
+                    }
                 }
 
                 "getNotificationChannels" -> {
@@ -400,6 +410,35 @@ class MainActivity : FlutterActivity() {
             .sortedBy { it["appName"] as String }
     }
 
+    private companion object {
+        const val PERM_GET_INSTALLED_APPS = "com.android.permission.GET_INSTALLED_APPS"
+        const val PERM_MANAGER_MIUI       = "com.lbe.security.miui"
+    }
+
+    /** 返回 MIUI 是否支持动态申请获取应用列表权限。 */
+    private fun isMiuiAppListPermissionSupported(): Boolean {
+        return try {
+            val info = packageManager.getPermissionInfo(PERM_GET_INSTALLED_APPS, 0)
+            info != null && info.packageName == PERM_MANAGER_MIUI
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
+
+    private fun checkAppListPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this, PERM_GET_INSTALLED_APPS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestAppListPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(PERM_GET_INSTALLED_APPS),
+            REQUEST_APP_LIST_PERMISSION
+        )
+    }
+
     private fun checkNotificationPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
@@ -443,6 +482,19 @@ class MainActivity : FlutterActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQUEST_APP_LIST_PERMISSION) {
+            // 无论是否授权，都执行查询（未授权时返回有限列表）
+            val r = pendingAppsResult
+            val incSys = pendingAppsIncludeSystem
+            pendingAppsResult = null
+            if (r != null) {
+                Thread {
+                    val apps = getInstalledApps(incSys)
+                    runOnUiThread { r.success(apps) }
+                }.start()
+            }
+        }
 
         if (requestCode == REQUEST_NOTIFICATION_PERMISSION) {
             val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
