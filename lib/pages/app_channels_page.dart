@@ -306,7 +306,7 @@ class _AppChannelsPageState extends State<AppChannelsPage> {
                       focusNotif: extras['focus'] ?? kTriOptDefault,
                       firstFloat: extras['first_float'] ?? kTriOptDefault,
                       enableFloat: extras['enable_float'] ?? kTriOptDefault,
-                      islandTimeout: extras['timeout'] ?? '3600',
+                      islandTimeout: extras['timeout'] ?? '5',
                       onToggle: (v) => _toggle(ch.id, v),
                       onTemplateChanged: (t) => _setTemplate(ch.id, t),
                       onIconModeChanged: (v) => _setIconMode(ch.id, v),

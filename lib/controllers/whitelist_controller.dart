@@ -233,7 +233,7 @@ class WhitelistController extends ChangeNotifier {
           'focus': prefs.getString('pref_channel_focus_${packageName}_$id') ?? kTriOptDefault,
           'first_float': prefs.getString('pref_channel_first_float_${packageName}_$id') ?? kTriOptDefault,
           'enable_float': prefs.getString('pref_channel_enable_float_${packageName}_$id') ?? kTriOptDefault,
-          'timeout': prefs.getString('pref_channel_timeout_${packageName}_$id') ?? '3600',
+          'timeout': prefs.getString('pref_channel_timeout_${packageName}_$id') ?? '5',
         })));
   }
 

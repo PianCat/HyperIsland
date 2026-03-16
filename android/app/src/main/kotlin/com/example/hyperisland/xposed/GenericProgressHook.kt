@@ -240,9 +240,9 @@ class GenericProgressHook : IXposedHookLoadPackage {
             )
             val islandTimeoutStr = loadChannelStringSetting(
                 context, "timeout:$pkg/$channelId",
-                "pref_channel_timeout_${pkg}_$channelId", "3600"
+                "pref_channel_timeout_${pkg}_$channelId", "5"
             )
-            val islandTimeout = islandTimeoutStr.toIntOrNull() ?: 3600
+            val islandTimeout = islandTimeoutStr.toIntOrNull() ?: 5
 
             XposedBridge.log(
                 "HyperIsland[Generic]: $pkg/$channelId | $title | $progressPercent% | template=$template | buttons=${actions.size} | largeIcon=${largeIcon != null}"

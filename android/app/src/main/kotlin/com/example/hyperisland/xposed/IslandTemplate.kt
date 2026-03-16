@@ -92,8 +92,8 @@ data class NotifData(
     val firstFloat: String = "default",
     /** 更新时自动展开 enableFloat："default" / "on" / "off" */
     val enableFloatMode: String = "default",
-    /** 超级岛自动消失时间，默认 3600 */
-    val islandTimeout: Int = 3600,
+    /** 超级岛自动消失时间，默认 5 */
+    val islandTimeout: Int = 5,
     /** 是否为实时（持续）通知，对应 Notification.FLAG_ONGOING_EVENT */
     val isOngoing: Boolean = false,
 )
