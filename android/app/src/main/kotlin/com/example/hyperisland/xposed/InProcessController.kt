@@ -13,6 +13,7 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import com.example.hyperisland.getAppIcon
 import com.example.hyperisland.xposed.templates.DownloadIslandNotification
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -469,14 +470,7 @@ object InProcessController {
      */
     fun getAppIcon(context: Context, packageName: String): android.graphics.drawable.Icon? {
         return try {
-            val drawable = context.packageManager.getApplicationIcon(packageName)
-            val w = drawable.intrinsicWidth.coerceAtLeast(1)
-            val h = drawable.intrinsicHeight.coerceAtLeast(1)
-            val bitmap = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
-            val canvas = android.graphics.Canvas(bitmap)
-            drawable.setBounds(0, 0, w, h)
-            drawable.draw(canvas)
-            android.graphics.drawable.Icon.createWithBitmap(bitmap)
+            context.packageManager.getAppIcon(packageName)
         } catch (e: Exception) {
             XposedBridge.log("HyperIsland: getAppIcon($packageName) failed: ${e.message}")
             null

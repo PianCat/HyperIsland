@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -382,12 +381,7 @@ class MainActivity : FlutterActivity() {
             .mapNotNull { app ->
                 try {
                     val label    = pm.getApplicationLabel(app).toString()
-                    val drawable = pm.getApplicationIcon(app.packageName)
-                    val size = 96
-                    val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-                    val canvas = Canvas(bmp)
-                    drawable.setBounds(0, 0, size, size)
-                    drawable.draw(canvas)
+                    val bmp = pm.getApplicationIcon(app.packageName).toBitmap(96)
                     val stream = ByteArrayOutputStream()
                     bmp.compress(Bitmap.CompressFormat.PNG, 90, stream)
                     mapOf(
