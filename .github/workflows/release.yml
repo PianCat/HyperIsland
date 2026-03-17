@@ -70,12 +70,12 @@ jobs:
             echo "::notice::Version $VERSION_NAME will be released."
           else
             # 版本未变更，标记为 false，只编译不发布
-            # versionCode 递增，versionName 添加 -dev 后缀
+            # versionCode 递增，versionName 添加 -dev 和构建号后缀
             NEW_VERSION_CODE=$((VERSION_CODE + 1))
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "build_version_name=$VERSION_NAME-dev" >> $GITHUB_OUTPUT
+            echo "build_version_name=$VERSION_NAME-dev.$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
             echo "build_version_code=$NEW_VERSION_CODE" >> $GITHUB_OUTPUT
-            echo "::notice::Build only version: $VERSION_NAME-dev+$NEW_VERSION_CODE"
+            echo "::notice::Build only version: $VERSION_NAME-dev.$NEW_VERSION_CODE+$NEW_VERSION_CODE"
           fi
 
           # 输出原始版本信息供后续步骤使用
@@ -177,43 +177,76 @@ jobs:
       - name: Extract changelog
         if: steps.version.outputs.changed == 'true'
         id: changelog
+        shell: pwsh
         run: |
-          VERSION="${{ steps.version.outputs.version_name }}"
-          PREVIOUS_VERSION="${{ steps.version.outputs.previous_version }}"
+          $version = "${{ steps.version.outputs.version_name }}"
+          $previousVersion = "${{ steps.version.outputs.previous_version }}"
+          $changelogContent = ""
 
-          # 初始化日志文件
-          > changelog_content.txt
+          # 优先从 CHANGELOG.md 提取版本更新内容
+          try {
+            if (Test-Path 'CHANGELOG.md') {
+              $changelogFile = Get-Content 'CHANGELOG.md' -Raw
+              # 匹配以 "# V<version>" 开头直到下一个版本标题或文件结尾
+              # 支持格式：# V1.6.8 或 # V1.6.8 (2024-12-19)
+              $escapedVersion = [regex]::Escape($version)
+              $pattern = "(?ms)^#\s*V$escapedVersion\b[\s\S]*?(?=^#\s*V\d+\.\d+\.\d+\b|\Z)"
+              $match = [regex]::Match($changelogFile, $pattern)
 
-          # 尝试从 CHANGELOG.md 中提取版本日志
-          if [ -f CHANGELOG.md ]; then
-            # 查找版本条目（格式：# V版本号）
-            if grep -q "^# V$VERSION " CHANGELOG.md; then
-              # 提取从 # V版本号 开始到下一个 # V 或 --- 分割线的内容
-              awk "/^# V$VERSION /,/^(# V|---)/ {
-                if (/^# V$VERSION /) { next }
-                if (/^(# V|---)/ && !/^# V$VERSION /) { exit }
-                print
-              }" CHANGELOG.md | sed -e '/^[[:space:]]*$/d' >> changelog_content.txt
-            fi
-          fi
+              # 如果简单模式不匹配，尝试包含日期的完整模式
+              if (-not $match.Success) {
+                $pattern = "(?ms)^#\s*V$escapedVersion\s*\([\d-]+\)[\s\S]*?(?=^#\s*V\d+\.\d+\.\d+\s*\(|\Z)"
+                $match = [regex]::Match($changelogFile, $pattern)
+              }
 
-          # 如果 CHANGELOG.md 中没有找到版本条目或日志为空，从 git 记录生成
-          if [ ! -s changelog_content.txt ]; then
-            echo "### 变更日志" > changelog_content.txt
-            echo "" >> changelog_content.txt
+              if ($match.Success) {
+                $section = $match.Value.Trim()
+                # 去掉第一行标题（# Vx.y.z ...）
+                $lines = $section -split "`n"
+                if ($lines.Length -gt 1) {
+                  $body = ($lines | Select-Object -Skip 1) -join "`n"
+                } else {
+                  $body = $section
+                }
+                $body = $body.Trim()
+                if ($body) {
+                  echo "已从 CHANGELOG.md 提取版本更新内容"
+                  $changelogContent = $body
+                }
+              }
+            }
+          } catch {
+            echo "从 CHANGELOG.md 提取内容失败: $_"
+          }
 
-            if [ -n "$PREVIOUS_VERSION" ] && git rev-parse "v$PREVIOUS_VERSION" >/dev/null 2>&1; then
-              git log "v$PREVIOUS_VERSION"..HEAD --pretty=format:"- %s" >> changelog_content.txt
-            else
-              git log --pretty=format:"- %s" -20 >> changelog_content.txt
-            fi
-          fi
+          # 如果还是没有内容，生成commit日志
+          if (-not $changelogContent) {
+            echo "未在 CHANGELOG.md 中找到版本 $version 的段落，使用提交记录生成更新内容"
+            $commitLog = ""
+
+            if ($previousVersion -ne "") {
+              try {
+                $commits = git log "v$previousVersion"..HEAD --pretty=format:"- %s" 2>$null
+                if ($commits) {
+                  $commitLog = $commits
+                }
+              } catch {
+                echo "无法获取版本标签间的提交记录"
+              }
+            }
+
+            if (-not $commitLog) {
+              $commits = git log --pretty=format:"- %s" -20 2>$null
+              $commitLog = $commits
+            }
+
+            $changelogContent = "### 变更日志`n`n$commitLog"
+          }
 
           # 将多行内容转换为 GitHub Output 格式
-          CHANGELOG=$(cat changelog_content.txt)
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "content<<EOF" >> $env:GITHUB_OUTPUT
+          echo "$changelogContent" >> $env:GITHUB_OUTPUT
+          echo "EOF" >> $env:GITHUB_OUTPUT
 
       # 第十三步：创建 GitHub Release（仅在版本变更时执行）
       # 在 GitHub 的 Releases 页面创建新版本发布
