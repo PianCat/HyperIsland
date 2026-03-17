@@ -9,8 +9,6 @@
         android:protectionLevel="signature" />
     <uses-permission android:name="com.example.hyperisland.SEND_ISLAND" />
 
-    <!-- 通知权限 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- 下载管理权限 -->
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"/>
     <uses-permission android:name="android.permission.ACCESS_DOWNLOAD_MANAGER"/>
