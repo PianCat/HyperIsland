@@ -12,6 +12,8 @@ class WhitelistPage extends StatefulWidget {
 class _WhitelistPageState extends State<WhitelistPage> {
   late final WhitelistController _ctrl;
   final _searchCtrl = TextEditingController();
+  final _searchFocus = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -22,9 +24,16 @@ class _WhitelistPageState extends State<WhitelistPage> {
   }
 
   @override
+  void deactivate() {
+    _searchFocus.unfocus();
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _ctrl.dispose();
     _searchCtrl.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -103,6 +112,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
                   const SizedBox(height: 12),
                   SearchBar(
                     controller: _searchCtrl,
+                    focusNode: _searchFocus,
                     hintText: '搜索应用名或包名',
                     leading: const Icon(Icons.search),
                     trailing: [
@@ -116,6 +126,7 @@ class _WhitelistPageState extends State<WhitelistPage> {
                         ),
                     ],
                     onChanged: _ctrl.setSearch,
+                    onSubmitted: (_) => _searchFocus.unfocus(),
                     padding: const WidgetStatePropertyAll(
                       EdgeInsets.symmetric(horizontal: 16),
                     ),
