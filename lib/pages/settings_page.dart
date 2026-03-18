@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/config_io_controller.dart';
 import '../controllers/settings_controller.dart';
+import '../controllers/update_controller.dart';
+import '../l10n/app_localizations.dart';
 import '../widgets/section_label.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -13,20 +16,22 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  late final SettingsController _ctrl;
+  final _ctrl = SettingsController.instance;
+  bool _checkingUpdate = false;
+
+  void _onChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
-    _ctrl = SettingsController();
-    _ctrl.addListener(() {
-      if (mounted) setState(() {});
-    });
+    _ctrl.addListener(_onChanged);
   }
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _ctrl.removeListener(_onChanged);
     super.dispose();
   }
 
@@ -34,9 +39,9 @@ class _SettingsPageState extends State<SettingsPage> {
     await _ctrl.setResumeNotification(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请重启作用域应用以使设置生效'),
-          duration: Duration(seconds: 4),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.restartScopeApp),
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -46,9 +51,9 @@ class _SettingsPageState extends State<SettingsPage> {
     await _ctrl.setUseHookAppIcon(value);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请重启作用域应用以使设置生效'),
-          duration: Duration(seconds: 4),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.restartScopeApp),
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -65,52 +70,133 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  String _localizeConfigIOError(AppLocalizations l10n, ConfigIOError error) {
+    return switch (error) {
+      ConfigIOError.invalidFormat => l10n.errorInvalidFormat,
+      ConfigIOError.noStorageDirectory => l10n.errorNoStorageDir,
+      ConfigIOError.noFileSelected => l10n.errorNoFileSelected,
+      ConfigIOError.noFilePath => l10n.errorNoFilePath,
+      ConfigIOError.emptyClipboard => l10n.errorEmptyClipboard,
+    };
+  }
+
   Future<void> _exportToFile() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final path = await ConfigIOController.exportToFile();
-      _showSnack('已导出到：$path');
+      _showSnack(l10n.exportedTo(path));
+    } on ConfigIOException catch (e) {
+      _showSnack(l10n.exportFailed(_localizeConfigIOError(l10n, e.error)));
     } catch (e) {
-      _showSnack('导出失败：$e');
+      _showSnack(l10n.exportFailed(e.toString()));
     }
   }
 
   Future<void> _exportToClipboard() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ConfigIOController.exportToClipboard();
-      _showSnack('配置已复制到剪贴板');
+      _showSnack(l10n.configCopied);
+    } on ConfigIOException catch (e) {
+      _showSnack(l10n.exportFailed(_localizeConfigIOError(l10n, e.error)));
     } catch (e) {
-      _showSnack('导出失败：$e');
+      _showSnack(l10n.exportFailed(e.toString()));
     }
   }
 
   Future<void> _importFromFile() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final count = await ConfigIOController.importFromFile();
-      _showSnack('导入成功，共 $count 项配置，请重启应用生效');
+      _showSnack(l10n.importSuccess(count));
+    } on ConfigIOException catch (e) {
+      _showSnack(l10n.importFailed(_localizeConfigIOError(l10n, e.error)));
     } catch (e) {
-      _showSnack('导入失败：$e');
+      _showSnack(l10n.importFailed(e.toString()));
     }
   }
 
   Future<void> _importFromClipboard() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final count = await ConfigIOController.importFromClipboard();
-      _showSnack('导入成功，共 $count 项配置，请重启应用生效');
+      _showSnack(l10n.importSuccess(count));
+    } on ConfigIOException catch (e) {
+      _showSnack(l10n.importFailed(_localizeConfigIOError(l10n, e.error)));
     } catch (e) {
-      _showSnack('导入失败：$e');
+      _showSnack(l10n.importFailed(e.toString()));
     }
+  }
+
+  Future<void> _doCheckUpdate() async {
+    setState(() => _checkingUpdate = true);
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        await UpdateController.checkAndShow(context, info.version,
+            showUpToDate: true);
+      }
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
+    }
+  }
+
+  String _themeModeLabel(AppLocalizations l10n) => switch (_ctrl.themeMode) {
+    ThemeMode.light  => l10n.themeModeLight,
+    ThemeMode.dark   => l10n.themeModeDark,
+    ThemeMode.system => l10n.themeModeSystem,
+  };
+
+  String _localeLabel(AppLocalizations l10n) {
+    if (_ctrl.locale == null) return l10n.languageAuto;
+    return switch (_ctrl.locale!.languageCode) {
+      'zh' => l10n.languageZh,
+      'en' => l10n.languageEn,
+      _    => _ctrl.locale!.languageCode,
+    };
+  }
+
+  Future<void> _showThemeModeDialog(AppLocalizations l10n) async {
+    final result = await showDialog<ThemeMode>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.themeModeTitle),
+        children: [
+          _RadioOption(l10n.themeModeSystem, ThemeMode.system, _ctrl.themeMode),
+          _RadioOption(l10n.themeModeLight,  ThemeMode.light,  _ctrl.themeMode),
+          _RadioOption(l10n.themeModeDark,   ThemeMode.dark,   _ctrl.themeMode),
+        ],
+      ),
+    );
+    if (result != null) _ctrl.setThemeMode(result);
+  }
+
+  Future<void> _showLanguageDialog(AppLocalizations l10n) async {
+    final result = await showDialog<Locale?>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.languageTitle),
+        children: [
+          _RadioOption<Locale?>(l10n.languageAuto, null,              _ctrl.locale),
+          _RadioOption<Locale?>(l10n.languageZh,   const Locale('zh'), _ctrl.locale),
+          _RadioOption<Locale?>(l10n.languageEn,   const Locale('en'), _ctrl.locale),
+        ],
+      ),
+    );
+    if (result != _ctrl.locale) _ctrl.setLocale(result);
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: cs.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar.large(
-            title: const Text('设置'),
+            title: Text(l10n.navSettings),
             backgroundColor: cs.surface,
             centerTitle: false,
           ),
@@ -123,26 +209,7 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const SectionLabel('行为'),
-                  const SizedBox(height: 8),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
-                      title: const Text('下载管理器暂停后保留焦点通知'),
-                      subtitle: const Text('显示一条通知，点击以继续下载，可能导致状态不同步'),
-                      value: _ctrl.resumeNotification,
-                      onChanged: _onResumeNotificationChanged,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const SectionLabel('外观'),
+                  SectionLabel(l10n.behaviorSection),
                   const SizedBox(height: 8),
                   Card(
                     elevation: 0,
@@ -154,8 +221,44 @@ class _SettingsPageState extends State<SettingsPage> {
                         SwitchListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
-                          title: const Text('使用应用图标'),
-                          subtitle: const Text('下载管理器通知使用应用图标'),
+                          title: Text(l10n.keepFocusNotifTitle),
+                          subtitle: Text(l10n.keepFocusNotifSubtitle),
+                          value: _ctrl.resumeNotification,
+                          onChanged: _onResumeNotificationChanged,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16))),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.checkUpdateOnLaunchTitle),
+                          subtitle: Text(l10n.checkUpdateOnLaunchSubtitle),
+                          value: _ctrl.checkUpdateOnLaunch,
+                          onChanged: _ctrl.setCheckUpdateOnLaunch,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(16))),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SectionLabel(l10n.appearanceSection),
+                  const SizedBox(height: 8),
+                  Card(
+                    elevation: 0,
+                    color: cs.surfaceContainerHighest,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.useAppIconTitle),
+                          subtitle: Text(l10n.useAppIconSubtitle),
                           value: _ctrl.useHookAppIcon,
                           onChanged: _onUseHookAppIconChanged,
                           shape: RoundedRectangleBorder(
@@ -165,18 +268,37 @@ class _SettingsPageState extends State<SettingsPage> {
                         SwitchListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
-                          title: const Text('图标圆角'),
-                          subtitle: const Text('为通知图标添加圆角效果'),
+                          title: Text(l10n.roundIconTitle),
+                          subtitle: Text(l10n.roundIconSubtitle),
                           value: _ctrl.roundIcon,
                           onChanged: _onRoundIconChanged,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16)),
                         ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.themeModeTitle),
+                          subtitle: Text(_themeModeLabel(l10n)),
+                          onTap: () => _showThemeModeDialog(l10n),
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 4),
+                          title: Text(l10n.languageTitle),
+                          subtitle: Text(_localeLabel(l10n)),
+                          onTap: () => _showLanguageDialog(l10n),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(16))),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const SectionLabel('配置'),
+                  SectionLabel(l10n.configSection),
                   const SizedBox(height: 8),
                   Card(
                     elevation: 0,
@@ -192,8 +314,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               borderRadius: BorderRadius.vertical(
                                   top: Radius.circular(16))),
                           leading: const Icon(Icons.upload_file_outlined),
-                          title: const Text('导出到文件'),
-                          subtitle: const Text('将配置保存为 JSON 文件'),
+                          title: Text(l10n.exportToFile),
+                          subtitle: Text(l10n.exportToFileSubtitle),
                           onTap: _exportToFile,
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
@@ -201,8 +323,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
                           leading: const Icon(Icons.copy_outlined),
-                          title: const Text('导出到剪贴板'),
-                          subtitle: const Text('将配置复制为 JSON 文本'),
+                          title: Text(l10n.exportToClipboard),
+                          subtitle: Text(l10n.exportToClipboardSubtitle),
                           onTap: _exportToClipboard,
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
@@ -210,8 +332,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 4),
                           leading: const Icon(Icons.download_outlined),
-                          title: const Text('从文件导入'),
-                          subtitle: const Text('从 JSON 文件恢复配置'),
+                          title: Text(l10n.importFromFile),
+                          subtitle: Text(l10n.importFromFileSubtitle),
                           onTap: _importFromFile,
                         ),
                         const Divider(height: 1, indent: 16, endIndent: 16),
@@ -222,15 +344,15 @@ class _SettingsPageState extends State<SettingsPage> {
                               borderRadius: BorderRadius.vertical(
                                   bottom: Radius.circular(16))),
                           leading: const Icon(Icons.paste_outlined),
-                          title: const Text('从剪贴板导入'),
-                          subtitle: const Text('从剪贴板中的 JSON 文本恢复配置'),
+                          title: Text(l10n.importFromClipboard),
+                          subtitle: Text(l10n.importFromClipboardSubtitle),
                           onTap: _importFromClipboard,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const SectionLabel('关于'),
+                  SectionLabel(l10n.aboutSection),
                   const SizedBox(height: 8),
                   Card(
                     elevation: 0,
@@ -240,10 +362,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: Column(
                       children: [
                         ListTile(
+                          leading: const Icon(Icons.system_update_outlined),
+                          title: Text(l10n.checkUpdate),
+                          trailing: _checkingUpdate
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child:
+                            CircularProgressIndicator(strokeWidth: 2),
+                          )
+                              : null,
+                          onTap: _checkingUpdate ? null : _doCheckUpdate,
+                        ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        ListTile(
                           shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(16),
-                                  bottom: Radius.circular(16))),
+                                  top: Radius.circular(16))),
                           leading: const Icon(Icons.code),
                           title: const Text('GitHub'),
                           subtitle: const Text('1812z/HyperIsland'),
@@ -253,32 +388,27 @@ class _SettingsPageState extends State<SettingsPage> {
                             mode: LaunchMode.externalApplication,
                           ),
                         ),
+                        const Divider(height: 1, indent: 16, endIndent: 16),
+                        ListTile(
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  bottom: Radius.circular(16))),
+                          leading: const Icon(Icons.group_outlined),
+                          title: Text(l10n.qqGroup),
+                          subtitle: const Text('1045114341'),
+                          trailing: const Icon(Icons.copy, size: 18),
+                          onTap: () {
+                            Clipboard.setData(
+                                const ClipboardData(text: '1045114341'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.groupNumberCopied),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Card(
-                    elevation: 0,
-                    color: cs.surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      leading: const Icon(Icons.group_outlined),
-                      title: const Text('QQ 交流群'),
-                      subtitle: const Text('1045114341'),
-                      trailing: const Icon(Icons.copy, size: 18),
-                      onTap: () {
-                        Clipboard.setData(
-                            const ClipboardData(text: '1045114341'));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('群号已复制到剪贴板'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -287,6 +417,25 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Generic radio option for SimpleDialog — pops the dialog with [value].
+class _RadioOption<T> extends StatelessWidget {
+  const _RadioOption(this.label, this.value, this.groupValue, {super.key});
+
+  final String label;
+  final T value;
+  final T groupValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return RadioListTile<T>(
+      title: Text(label),
+      value: value,
+      groupValue: groupValue,
+      onChanged: (_) => Navigator.of(context).pop(value),
     );
   }
 }
