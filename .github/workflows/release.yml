@@ -93,22 +93,18 @@ jobs:
           distribution: 'temurin'
 
       # 第四步：安装 Flutter SDK
-      # 使用指定版本的 Flutter
-      # 启用缓存加速下载
       - name: Set up Flutter
         uses: subosito/flutter-action@v2.16.0
         with:
           flutter-version: '3.32.6'
-          cache: true
-          cache-key: flutter-${{ runner.os }}-3.32.6-${{ hashFiles('**/pubspec.lock') }}
-          cache-path: ${{ runner.tool_cache }}/flutter
+          cache: false
 
       # 第五步：设置 Gradle
-      # 使用官方 Gradle setup action，自动处理缓存
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4.1.0
         with:
           gradle-version: wrapper
+          cache-disabled: true
 
       # 第五点五步：清理 Flutter 缓存
       # 清理 build/ 目录和中间文件，确保构建环境纯净
