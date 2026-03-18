@@ -31,7 +31,14 @@
       "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" && flutter analyze lib/pages/settings_page.dart lib/controllers/config_io_controller.dart 2>&1)",
       "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" && sed -i 's/com\\\\.example\\\\.hyperisland/io.github.hyperisland/g' android/app/src/main/AndroidManifest.xml android/app/proguard-rules.pro android/app/src/main/assets/xposed_init)",
       "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland/android/app/src/main/kotlin\" && mkdir -p io/github && cp -r com/example/hyperisland io/github/hyperisland && echo \"copied\")",
-      "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland/android/app/src/main/kotlin\" && rm -rf com && echo \"removed old\")"
+      "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland/android/app/src/main/kotlin\" && rm -rf com && echo \"removed old\")",
+      "Bash(find \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" -type f -name \"*.arb\" -o -name \"l10n.yaml\" -o -name \"*localization*\" -o -name \"*i18n*\" 2>/dev/null | head -20)",
+      "Bash(cd \"C:/Users/1812z/Documents/GitHub/hyperisland\" && flutter gen-l10n 2>&1)",
+      "Bash(cd \"C:/Users/1812z/Documents/GitHub/hyperisland\" && flutter analyze 2>&1 | head -50)",
+      "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" && flutter gen-l10n 2>&1)",
+      "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" && flutter analyze lib/pages/settings_page.dart lib/main.dart lib/controllers/settings_controller.dart 2>&1 | tail -20)",
+      "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" && flutter gen-l10n 2>&1 && flutter analyze lib/pages/home_page.dart lib/pages/settings_page.dart lib/controllers/update_controller.dart lib/controllers/settings_controller.dart 2>&1 | tail -15)",
+      "Bash(cd \"C:\\\\Users\\\\1812z\\\\Documents\\\\GitHub\\\\hyperisland\" && flutter analyze lib/pages/home_page.dart lib/pages/settings_page.dart lib/controllers/update_controller.dart lib/controllers/settings_controller.dart 2>&1 | tail -5)"
     ]
   }
 }
