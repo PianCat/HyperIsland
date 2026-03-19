@@ -147,5 +147,24 @@
   "errorNoStorageDir": "Cannot get storage directory",
   "errorNoFileSelected": "No file selected",
   "errorNoFilePath": "Cannot get file path",
-  "errorEmptyClipboard": "Clipboard is empty"
+  "errorEmptyClipboard": "Clipboard is empty",
+
+  "navBlacklist": "Focus Blacklist",
+  "navBlacklistSubtitle": "Block focus notification float or hide for specific apps",
+  "blacklistStrategy": "Intercept Strategy",
+  "blacklistStrategySkip": "A. Disable auto-float (Keep island)",
+  "blacklistStrategyDisable": "B. Disable completely (Drop)",
+  "presetGamesTitle": "Quick Filter Popular Games",
+  "presetGamesSuccess": "Added {count} installed games to blacklist from preset",
+  "@presetGamesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoAccessibilityFailed": "Silent enable failed (Root rejected/timeout). Please turn on manually.",
+  "jumpToAccessibility": "Go to Accessibility Settings",
+  "blacklistedAppsCount": "Blocked focus notifications for {count} apps",
+  "blacklistedAppsCountWithSystem": "Blocked focus notifications for {count} apps (including system apps)"
 }

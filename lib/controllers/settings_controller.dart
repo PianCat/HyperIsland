@@ -7,7 +7,6 @@ const kPrefRoundIcon          = 'pref_round_icon';
 const kPrefThemeMode             = 'pref_theme_mode';
 const kPrefLocale                = 'pref_locale';
 const kPrefCheckUpdateOnLaunch   = 'pref_check_update_on_launch';
-
 class SettingsController extends ChangeNotifier {
   static final SettingsController instance = SettingsController._();
 

@@ -41,10 +41,58 @@ object NotificationIslandNotification : IslandTemplate {
     } catch (_: Exception) { TEMPLATE_NAME }
 
     override fun inject(context: Context, extras: Bundle, data: NotifData) {
-        if (data.focusNotif == "off") {
+        val cr = context.contentResolver
+        val blacklistStr = try {
+            val uri = android.net.Uri.parse("content://io.github.hyperisland.settings/pref_app_blacklist")
+            cr.query(uri, null, null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else "" } ?: ""
+        } catch (_: Exception) { "" }
+        var blacklistStrategy = try {
+            val uri = android.net.Uri.parse("content://io.github.hyperisland.settings/pref_app_blacklist_strategy")
+            cr.query(uri, null, null, null, null)?.use { if (it.moveToFirst()) it.getString(0) else "skip" } ?: "skip"
+        } catch (_: Exception) { "skip" }
+        if (blacklistStrategy.isEmpty()) {
+            blacklistStrategy = "skip"
+        }
+
+        var foregroundApp = ""
+        try {
+            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            @Suppress("DEPRECATION")
+            val tasks = am.getRunningTasks(1)
+            if (tasks.isNotEmpty()) {
+                foregroundApp = tasks[0].topActivity?.packageName ?: ""
+            }
+        } catch (e: Exception) {
+            XposedBridge.log("HyperIsland[Blacklist]: ActivityManager getRunningTasks failed: ${e.message}")
+        }
+
+        val isBlacklisted = blacklistStr.isNotEmpty() && blacklistStr.split(",").contains(foregroundApp)
+        
+        XposedBridge.log("HyperIsland[Blacklist]: Foreground=$foregroundApp, Strategy=$blacklistStrategy, isBlacklisted=$isBlacklisted")
+
+        var effectiveFirstFloat = data.firstFloat
+        var effectiveEnableFloat = data.enableFloatMode
+        var effectiveFocusNotif = data.focusNotif
+        
+        if (isBlacklisted) {
+            if (blacklistStrategy == "skip") {
+                effectiveFirstFloat = "off"
+                effectiveEnableFloat = "off"
+                XposedBridge.log("HyperIsland[Blacklist]: App $foregroundApp skipped float")
+            } else if (blacklistStrategy == "disable") {
+                XposedBridge.log("HyperIsland[Blacklist]: App $foregroundApp completely disabled")
+                return // completely abort island creation
+            }
+        }
+
+        if (effectiveFocusNotif == "off") {
             // 不处理通知 extras，原始通知直接通过；
             // 但仍通过 IslandDispatcher 直接触发超级岛展示。
-            injectViaDispatcher(context, data)
+            val mutatedData = data.copy(
+                firstFloat = effectiveFirstFloat,
+                enableFloatMode = effectiveEnableFloat
+            )
+            injectViaDispatcher(context, mutatedData)
             return
         }
         inject(
@@ -58,9 +106,9 @@ object NotificationIslandNotification : IslandTemplate {
             appIconRaw      = data.appIconRaw,
             iconMode        = data.iconMode,
             focusIconMode   = data.focusIconMode,
-            focusNotif      = data.focusNotif,
-            firstFloat      = data.firstFloat,
-            enableFloatMode = data.enableFloatMode,
+            focusNotif      = effectiveFocusNotif,
+            firstFloat      = effectiveFirstFloat,
+            enableFloatMode = effectiveEnableFloat,
             timeoutSecs     = data.islandTimeout,
             isOngoing       = data.isOngoing,
         )

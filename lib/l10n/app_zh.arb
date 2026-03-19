@@ -251,5 +251,34 @@
   "errorNoStorageDir": "无法获取存储目录",
   "errorNoFileSelected": "未选择文件",
   "errorNoFilePath": "无法获取文件路径",
-  "errorEmptyClipboard": "剪贴板为空"
+  "errorEmptyClipboard": "剪贴板为空",
+
+  "navBlacklist": "焦点黑名单",
+  "navBlacklistSubtitle": "屏蔽指定应用的焦点通知展开或强制隐藏",
+  "blacklistStrategy": "拦截策略",
+  "blacklistStrategySkip": "A. 不自动展开 (保留岛提醒)",
+  "blacklistStrategyDisable": "B. 直接禁用 (完全抛弃)",
+  "presetGamesTitle": "一键过滤热门游戏",
+  "presetGamesSuccess": "已从模板中添加 {count} 款已安装游戏至黑名单",
+  "@presetGamesSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoAccessibilityFailed": "静默开启失败（Root 取消或超时），请前往系统设置手动开启",
+  "jumpToAccessibility": "前往无障碍设置",
+  "blacklistedAppsCount": "已拦截 {count} 个应用的焦点通知",
+  "@blacklistedAppsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "blacklistedAppsCountWithSystem": "已拦截 {count} 个应用的焦点通知（含系统应用）",
+  "@blacklistedAppsCountWithSystem": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

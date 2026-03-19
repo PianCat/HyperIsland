@@ -454,4 +454,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errorEmptyClipboard => '剪贴板为空';
+
+  @override
+  String get navBlacklist => '焦点黑名单';
+
+  @override
+  String get navBlacklistSubtitle => '屏蔽指定应用的焦点通知展开或强制隐藏';
+
+  @override
+  String get blacklistStrategy => '拦截策略';
+
+  @override
+  String get blacklistStrategySkip => 'A. 不自动展开 (保留岛提醒)';
+
+  @override
+  String get blacklistStrategyDisable => 'B. 直接禁用 (完全抛弃)';
+
+  @override
+  String get presetGamesTitle => '一键过滤热门游戏';
+
+  @override
+  String presetGamesSuccess(int count) {
+    return '已从模板中添加 $count 款已安装游戏至黑名单';
+  }
+
+  @override
+  String get autoAccessibilityFailed => '静默开启失败（Root 取消或超时），请前往系统设置手动开启';
+
+  @override
+  String get jumpToAccessibility => '前往无障碍设置';
+
+  @override
+  String blacklistedAppsCount(int count) {
+    return '已拦截 $count 个应用的焦点通知';
+  }
+
+  @override
+  String blacklistedAppsCountWithSystem(int count) {
+    return '已拦截 $count 个应用的焦点通知（含系统应用）';
+  }
 }

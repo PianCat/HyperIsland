@@ -468,4 +468,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorEmptyClipboard => 'Clipboard is empty';
+
+  @override
+  String get navBlacklist => 'Focus Blacklist';
+
+  @override
+  String get navBlacklistSubtitle =>
+      'Block focus notification float or hide for specific apps';
+
+  @override
+  String get blacklistStrategy => 'Intercept Strategy';
+
+  @override
+  String get blacklistStrategySkip => 'A. Disable auto-float (Keep island)';
+
+  @override
+  String get blacklistStrategyDisable => 'B. Disable completely (Drop)';
+
+  @override
+  String get presetGamesTitle => 'Quick Filter Popular Games';
+
+  @override
+  String presetGamesSuccess(int count) {
+    return 'Added $count installed games to blacklist from preset';
+  }
+
+  @override
+  String get autoAccessibilityFailed =>
+      'Silent enable failed (Root rejected/timeout). Please turn on manually.';
+
+  @override
+  String get jumpToAccessibility => 'Go to Accessibility Settings';
+
+  @override
+  String blacklistedAppsCount(int count) {
+    return 'Blocked focus notifications for $count apps';
+  }
+
+  @override
+  String blacklistedAppsCountWithSystem(int count) {
+    return 'Blocked focus notifications for $count apps (including system apps)';
+  }
 }

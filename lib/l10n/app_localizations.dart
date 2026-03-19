@@ -907,6 +907,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'剪贴板为空'**
   String get errorEmptyClipboard;
+
+  /// No description provided for @navBlacklist.
+  ///
+  /// In zh, this message translates to:
+  /// **'焦点黑名单'**
+  String get navBlacklist;
+
+  /// No description provided for @navBlacklistSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'屏蔽指定应用的焦点通知展开或强制隐藏'**
+  String get navBlacklistSubtitle;
+
+  /// No description provided for @blacklistStrategy.
+  ///
+  /// In zh, this message translates to:
+  /// **'拦截策略'**
+  String get blacklistStrategy;
+
+  /// No description provided for @blacklistStrategySkip.
+  ///
+  /// In zh, this message translates to:
+  /// **'A. 不自动展开 (保留岛提醒)'**
+  String get blacklistStrategySkip;
+
+  /// No description provided for @blacklistStrategyDisable.
+  ///
+  /// In zh, this message translates to:
+  /// **'B. 直接禁用 (完全抛弃)'**
+  String get blacklistStrategyDisable;
+
+  /// No description provided for @presetGamesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'一键过滤热门游戏'**
+  String get presetGamesTitle;
+
+  /// No description provided for @presetGamesSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已从模板中添加 {count} 款已安装游戏至黑名单'**
+  String presetGamesSuccess(int count);
+
+  /// No description provided for @autoAccessibilityFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'静默开启失败（Root 取消或超时），请前往系统设置手动开启'**
+  String get autoAccessibilityFailed;
+
+  /// No description provided for @jumpToAccessibility.
+  ///
+  /// In zh, this message translates to:
+  /// **'前往无障碍设置'**
+  String get jumpToAccessibility;
+
+  /// No description provided for @blacklistedAppsCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已拦截 {count} 个应用的焦点通知'**
+  String blacklistedAppsCount(int count);
+
+  /// No description provided for @blacklistedAppsCountWithSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'已拦截 {count} 个应用的焦点通知（含系统应用）'**
+  String blacklistedAppsCountWithSystem(int count);
 }
 
 class _AppLocalizationsDelegate
