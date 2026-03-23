@@ -80,6 +80,7 @@ interface IslandTemplate {
 data class NotifData(
     val pkg: String,
     val channelId: String,
+    val notifId: Int,
     val title: String,
     val subtitle: String,
     val progress: Int,

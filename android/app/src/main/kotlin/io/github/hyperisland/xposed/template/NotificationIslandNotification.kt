@@ -8,6 +8,7 @@ import android.os.Bundle
 import io.github.hyperisland.xposed.IslandDispatcher
 import io.github.hyperisland.xposed.IslandRequest
 import io.github.hyperisland.xposed.IslandTemplate
+import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.hyperisland.xposed.NotifData
 import io.github.hyperisland.xposed.moduleContext
 import io.github.hyperisland.xposed.toRounded
@@ -43,6 +44,7 @@ object NotificationIslandNotification : IslandTemplate {
         inject(
             context         = context,
             extras          = extras,
+            notifId         = data.notifId,
             title           = data.title,
             subtitle        = data.subtitle,
             actions         = data.actions,
@@ -104,6 +106,7 @@ object NotificationIslandNotification : IslandTemplate {
     private fun inject(
         context: Context,
         extras: Bundle,
+        notifId: Int,
         title: String,
         subtitle: String,
         actions: List<Notification.Action>,
@@ -200,6 +203,13 @@ object NotificationIslandNotification : IslandTemplate {
             val jsonParam = fixTextButtonJson(builder.buildJsonParam(), wrapLongText)
                 .let { if (!isOngoing) injectUpdatable(it, false) else it }
             extras.putString("miui.focus.param", jsonParam)
+            if (showNotification) {
+                extras.putBoolean("hyperisland_focus_proxy", true)
+                FocusNotifStatusBarIconHook.markDirectProxyPosted(timeoutSecs)
+                XposedBridge.log(
+                    "HyperIsland[NotifIsland]: focus proxy marker written — title=$title | notifId=$notifId | showNotification=$showNotification"
+                )
+            }
 
             XposedBridge.log(
                 "HyperIsland[NotifIsland]: Island injected — $title | left=$leftText | right=$rightContent | buttons=${actions.size} | isOngoing=${isOngoing}"

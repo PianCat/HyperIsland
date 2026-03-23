@@ -5,3 +5,4 @@ io.github.hyperisland.xposed.IslandDispatcherHook
 io.github.hyperisland.xposed.hook.MarqueeHook
 io.github.hyperisland.xposed.hook.UnlockAllFocusHook
 io.github.hyperisland.xposed.hook.UnlockFocusAuthHook
+io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook

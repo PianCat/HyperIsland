@@ -326,6 +326,7 @@ class GenericProgressHook : IXposedHookLoadPackage {
                 data       = NotifData(
                     pkg             = pkg,
                     channelId       = channelId,
+                    notifId         = sbn.id,
                     title           = title,
                     subtitle        = subtitle,
                     progress        = progressPercent,

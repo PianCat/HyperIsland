@@ -12,6 +12,7 @@ import android.os.Build
 import io.github.hyperisland.getAppIcon
 import android.os.Bundle
 import de.robv.android.xposed.XposedBridge
+import io.github.hyperisland.xposed.hook.FocusNotifStatusBarIconHook
 import io.github.d4viddf.hyperisland_kit.HyperAction
 import io.github.d4viddf.hyperisland_kit.HyperIslandNotification
 import io.github.d4viddf.hyperisland_kit.HyperPicture
@@ -204,6 +205,15 @@ object IslandDispatcher {
                 .let { fixTextButtonJson(it, wrapLongText) }
                 .let { injectIslandAppearance(it, request.highlightColor, request.dismissIsland) }
             notif.extras.putString("miui.focus.param", jsonParam)
+            if (request.showNotification) {
+                notif.extras.putBoolean("hyperisland_focus_proxy", true)
+                FocusNotifStatusBarIconHook.markDirectProxyPosted(request.timeoutSecs)
+                XposedBridge.log(
+                    "$TAG focus proxy marker written: title=${request.title} | notifId=${request.notifId} | showNotification=${request.showNotification}"
+                )
+            } else {
+                FocusNotifStatusBarIconHook.clearDirectProxyPosted()
+            }
 
             val isFirstPost = !postedIds.contains(request.notifId)
             if (isFirstPost) {
