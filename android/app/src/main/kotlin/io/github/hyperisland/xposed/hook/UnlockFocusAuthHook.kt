@@ -1,5 +1,8 @@
 package io.github.hyperisland.xposed.hook
 
+import android.content.Context
+import android.net.Uri
+import de.robv.android.xposed.AndroidAppHelper
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -29,8 +32,31 @@ class UnlockFocusAuthHook : IXposedHookLoadPackage {
 
     companion object {
         private const val TAG = "HyperIsland[UnlockFocusAuthHook]"
+        private const val SETTINGS_KEY = "pref_unlock_focus_auth"
         private const val TARGET_PACKAGE = "com.xiaomi.xmsf"
         private const val AUTH_SESSION_CLASS = "com.xiaomi.xms.auth.AuthSession"
+    }
+
+    // ─── 开关读取 ─────────────────────────────────────────────────────────────
+
+    /**
+     * 通过 SettingsProvider 查询「移除焦点通知白名单签名验证」是否已启用。
+     * 查询失败时默认返回 false（保守策略，不影响系统正常行为）。
+     */
+    private fun isEnabled(ctx: Context): Boolean {
+        return try {
+            val uri = Uri.parse(
+                "content://io.github.hyperisland.settings/$SETTINGS_KEY"
+            )
+            ctx.contentResolver
+                .query(uri, null, null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getInt(0) == 1 else false
+                } ?: false
+        } catch (e: Throwable) {
+            XposedBridge.log("$TAG: failed to read setting — ${e.message}")
+            false
+        }
     }
 
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
@@ -69,6 +95,10 @@ class UnlockFocusAuthHook : IXposedHookLoadPackage {
             XposedBridge.hookMethod(targetMethod, object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     val error = param.args[0] ?: return // error 为 null 说明验证已成功，无需干预
+
+                    // 检查用户开关，未启用则不干预
+                    val ctx = AndroidAppHelper.currentApplication() ?: return
+                    if (!isEnabled(ctx)) return
 
                     try {
                         // 读取原始错误码，仅用于日志
