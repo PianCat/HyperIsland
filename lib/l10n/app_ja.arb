@@ -188,7 +188,7 @@
     }
   },
   "blacklistedAppsCount": "{count} 個のアプリのフォーカス通知をブロックしました",
-  "blacklistedAppsCountWithSystem": "{count} 個のアプリのフォーカス通知をブロックしました (システムアプリを含む)"
+  "blacklistedAppsCountWithSystem": "{count} 個のアプリのフォーカス通知をブロックしました (システムアプリを含む)",
 
   "firstFloatLabelSubtitle": "Island が初めて通知を受信時にフォーカス通知として展開します",
   "updateFloatLabelSubtitle": "Island の更新時にフロート通知を展開します",
