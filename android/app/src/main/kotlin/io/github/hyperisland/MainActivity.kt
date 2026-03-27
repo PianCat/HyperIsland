@@ -220,21 +220,27 @@ class MainActivity : FlutterActivity() {
     private fun convertAbxPolicyToXml(): String {
         val input = "/data/system/notification_policy.xml"
         val tmp   = "/data/local/tmp/.hyp_policy.xml"
+        val documents = "/storage/emulated/0/Documents/.hyp_policy.xml"
+        val prepareDocumentsDir = "mkdir -p /storage/emulated/0/Documents 2>/dev/null"
 
-        // 依次尝试几种调用姿势，兼容不同 ROM 和 Android 版本
+        // 依次尝试几种调用姿势，兼容不同 ROM 和 Android 版本。
+        // 成功时同时保留一份到 /data/local/tmp 和 Documents，方便手动排查。
         val cmds = listOf(
-            "abx2xml $input /dev/stdout 2>/dev/null",
-            "abx2xml $input - 2>/dev/null",
-            "abx2xml $input $tmp 2>/dev/null && cat $tmp; rm -f $tmp",
+            "$prepareDocumentsDir; abx2xml $input /dev/stdout 2>/dev/null | tee $tmp $documents",
+            "$prepareDocumentsDir; abx2xml $input - 2>/dev/null | tee $tmp $documents",
+            "$prepareDocumentsDir; abx2xml $input $tmp 2>/dev/null && cat $tmp | tee $documents",
         )
 
         for (cmd in cmds) {
             try {
                 val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
                 val out  = proc.inputStream.bufferedReader().readText()
-                proc.waitFor()
+                val exitCode = proc.waitFor()
                 if (out.length > 50 && out.contains('<')) {
-                    Log.d(TAG, "abx2xml ok: ${out.length} chars")
+                    Log.d(
+                        TAG,
+                        "abx2xml ok: ${out.length} chars, exit=$exitCode, tmp=$tmp, documents=$documents"
+                    )
                     return out
                 }
             } catch (e: Exception) {
