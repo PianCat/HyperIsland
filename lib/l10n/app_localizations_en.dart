@@ -462,7 +462,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rendererLabel => 'Style';
 
   @override
-  String get rendererImageTextWithButtons4Name => 'Image+Text+Buttons 4';
+  String get rendererImageTextWithButtons4Name =>
+      'Image+Text+Bottom Text Buttons';
 
   @override
   String get rendererCoverInfoName => 'Cover Info+Auto Wrap';

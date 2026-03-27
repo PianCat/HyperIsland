@@ -445,7 +445,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rendererLabel => '样式';
 
   @override
-  String get rendererImageTextWithButtons4Name => '新图文组件+按钮组件4';
+  String get rendererImageTextWithButtons4Name => '新图文组件+底部文本按钮';
 
   @override
   String get rendererCoverInfoName => '封面组件+自动换行';

@@ -889,7 +889,7 @@ abstract class AppLocalizations {
   /// No description provided for @rendererImageTextWithButtons4Name.
   ///
   /// In zh, this message translates to:
-  /// **'新图文组件+按钮组件4'**
+  /// **'新图文组件+底部文本按钮'**
   String get rendererImageTextWithButtons4Name;
 
   /// No description provided for @rendererCoverInfoName.
